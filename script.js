@@ -1,63 +1,61 @@
+var currentPage = 1;
+var itemsPerPage = 10; // Adjust the number of items per page as needed
+
 function fetchTableData() {
-    var selectedTable = document.getElementById("tableSelector").value;
+    var selectedTable = $("#tableSelector").val();
     if (!selectedTable) {
         return;
     }
 
-    var loading = document.getElementById("loading");
-    var error = document.getElementById("error");
-    var tableData = document.getElementById("tableData");
+    $("#loading").show();
+    $("#error").hide();
+    $("#tableData").hide();
 
-    loading.style.display = "block";
-    error.style.display = "none";
-    tableData.style.display = "none";
-
-    fetch("YOUR_API_BASE_URL/" + selectedTable) // Replace YOUR_API_BASE_URL with your actual API endpoint
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => renderTable(data))
-        .catch(error => {
-            loading.style.display = "none";
-            error.style.display = "block";
-            console.error('Error fetching data:', error);
-        });
+    $.ajax({
+        url: "YOUR_API_BASE_URL/" + selectedTable,
+        type: "GET",
+        data: { page: currentPage, limit: itemsPerPage },
+        success: function (data) {
+            renderTable(data.results); // Assuming the server returns paginated results
+            updatePagination(data.previous, data.next); // Assuming the server returns previous and next page URLs
+        },
+        error: function () {
+            $("#loading").hide();
+            $("#error").show();
+        }
+    });
 }
 
 function renderTable(data) {
-    var loading = document.getElementById("loading");
-    var error = document.getElementById("error");
-    var tableData = document.getElementById("tableData");
+    // Render the table based on the received data
+    // Your existing renderTable function code here
+}
 
-    loading.style.display = "none";
-    error.style.display = "none";
+function updatePagination(previousPage, nextPage) {
+    var prevButton = $(".pagination").find(".page-item").first();
+    var nextButton = $(".pagination").find(".page-item").last();
 
-    var tableHeaderRow = document.getElementById("tableHeaderRow");
-    var tableBody = document.getElementById("tableBody");
+    if (previousPage === null) {
+        prevButton.addClass("disabled");
+    } else {
+        prevButton.removeClass("disabled");
+    }
 
-    tableHeaderRow.innerHTML = "";
-    tableBody.innerHTML = "";
+    if (nextPage === null) {
+        nextButton.addClass("disabled");
+    } else {
+        nextButton.removeClass("disabled");
+    }
+}
 
-    var headers = Object.keys(data[0]);
+function prevPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        fetchTableData();
+    }
+}
 
-    headers.forEach(function (header) {
-        var th = document.createElement("th");
-        th.appendChild(document.createTextNode(header));
-        tableHeaderRow.appendChild(th);
-    });
-
-    data.forEach(function (row) {
-        var tr = document.createElement("tr");
-        headers.forEach(function (header) {
-            var td = document.createElement("td");
-            td.appendChild(document.createTextNode(row[header]));
-            tr.appendChild(td);
-        });
-        tableBody.appendChild(tr);
-    });
-
-    tableData.style.display = "block";
+function nextPage() {
+    currentPage++;
+    fetchTableData();
 }
