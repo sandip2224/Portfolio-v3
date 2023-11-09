@@ -1,48 +1,63 @@
 function fetchTableData() {
-    var selectedTable = $("#tableSelector").val();
+    var selectedTable = document.getElementById("tableSelector").value;
     if (!selectedTable) {
         return;
     }
 
-    $("#loading").show();
-    $("#error").hide();
-    $("#tableData").hide();
+    var loading = document.getElementById("loading");
+    var error = document.getElementById("error");
+    var tableData = document.getElementById("tableData");
 
-    $.ajax({
-        url: "YOUR_API_BASE_URL/" + selectedTable, // Replace YOUR_API_BASE_URL with your actual API endpoint
-        type: "GET",
-        success: function (data) {
-            renderTable(data);
-        },
-        error: function () {
-            $("#loading").hide();
-            $("#error").show();
-        }
-    });
+    loading.style.display = "block";
+    error.style.display = "none";
+    tableData.style.display = "none";
+
+    fetch("YOUR_API_BASE_URL/" + selectedTable) // Replace YOUR_API_BASE_URL with your actual API endpoint
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => renderTable(data))
+        .catch(error => {
+            loading.style.display = "none";
+            error.style.display = "block";
+            console.error('Error fetching data:', error);
+        });
 }
 
 function renderTable(data) {
-    $("#loading").hide();
-    $("#error").hide();
+    var loading = document.getElementById("loading");
+    var error = document.getElementById("error");
+    var tableData = document.getElementById("tableData");
 
-    $("#tableHeaderRow").empty();
-    $("#tableBody").empty();
+    loading.style.display = "none";
+    error.style.display = "none";
+
+    var tableHeaderRow = document.getElementById("tableHeaderRow");
+    var tableBody = document.getElementById("tableBody");
+
+    tableHeaderRow.innerHTML = "";
+    tableBody.innerHTML = "";
 
     var headers = Object.keys(data[0]);
-    var headerRow = $("#tableHeaderRow");
+
     headers.forEach(function (header) {
-        headerRow.append("<th>" + header + "</th>");
+        var th = document.createElement("th");
+        th.appendChild(document.createTextNode(header));
+        tableHeaderRow.appendChild(th);
     });
 
-    var tableBody = $("#tableBody");
     data.forEach(function (row) {
-        var tableRow = "<tr>";
+        var tr = document.createElement("tr");
         headers.forEach(function (header) {
-            tableRow += "<td>" + row[header] + "</td>";
+            var td = document.createElement("td");
+            td.appendChild(document.createTextNode(row[header]));
+            tr.appendChild(td);
         });
-        tableRow += "</tr>";
-        tableBody.append(tableRow);
+        tableBody.appendChild(tr);
     });
 
-    $("#tableData").show();
+    tableData.style.display = "block";
 }
